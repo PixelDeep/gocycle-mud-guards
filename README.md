@@ -1,5 +1,4 @@
-# gocycle-mud-guards
-Mud guards for GoCycle. 
+# GoCycle mud guards
 
 Made in OpenSCAD. Every parameter is tweakable.
 
