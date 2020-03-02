@@ -1,4 +1,4 @@
-$fn=100;
+$fn=400;
 tyre_width=45;
 tyre_radius=260;
 tyre_diameter=tyre_radius * 2;
@@ -11,10 +11,14 @@ guard_thickness=3;
 
 circle_deg=45;
 
-mount_width = 22.5;
+mount_side_cutout_diameter = 32;
 
-tap_length = 15;
+mount_width = 30;
+bar_height = 15;
+
+tap_length = 25;
 thumb_nut_diameter = 15.9;
+thumb_nut_cutout_diameter = 26.3;
 nut_mount_height = 10;
 nut_mount_diameter = 40;
 
@@ -30,17 +34,18 @@ module nutMountProfile() {
 				translate([15,15]) circle(10);
 			}
 			circle(d=nut_mount_diameter);
+			translate([-0.6,-1]) circle(d=nut_mount_diameter);
 		}		
 		circle(d=thumb_nut_diameter + tolerance);
 	}
 }
 
-module mountProfile(width, height = 10) {
+module mountProfile(width, new_height) {
+	height = new_height ? new_height : bar_height;
 	translate([(guard_width / 2) - 2, 0, 0]) resize([height - tolerance, width - tolerance]) circle();
 }
 
 module guardProfile() {
-	straight = 10;
 	inner_width = guard_width - guard_thickness;
 	union() {
 		difference() {	
@@ -74,7 +79,7 @@ module guardBarTap(bar_radius, os = 0) {
 	translate([-bar_radius - 5, 0]) {
 		rotate([0,0, os])
 		rotate_extrude(angle=tap_angle, convexity=10)
-			translate([bar_radius - tyre_width, 0]) mountProfile(mount_width - 4 - tolerance, 6);	
+			translate([bar_radius - tyre_width, 0]) mountProfile(mount_width - 4 - tolerance, bar_height - 4);	
 	}
 }
 
@@ -83,17 +88,21 @@ module guardBarHole(bar_radius, os = 0) {
 	translate([-bar_radius - 5, 0]) {
 		rotate([0,0,os])
 		rotate_extrude(angle=hole_angle, convexity=10)
-			translate([bar_radius - tyre_width, 0]) mountProfile(mount_width - 4, 6 + tolerance);	
+			translate([bar_radius - tyre_width, 0]) mountProfile(mount_width - 4, bar_height - 4 + tolerance);	
 	}
 }
 
-module barWithTap(bar_radius, bar_angle) {
+module barWithTap(bar_radius, bar_angle, tap=true, hole=true) {
 	union() {
 		difference() {
 			guardBar(bar_radius, bar_angle);
-			guardBarHole(bar_radius);
+			if (hole == true) {
+				guardBarHole(bar_radius);
+			}
 		}
-		guardBarTap(bar_radius, os=circle_deg);
+		if (tap == true) {
+			guardBarTap(bar_radius, os=bar_angle);
+		}
 	}
 }
 
@@ -104,16 +113,24 @@ module mount() {
 					nutMountProfile();
 		}
 
-		translate([0, -10]) {
+		translate([1, -16]) {
 			difference() {
-				translate([-guard_radius - 5, 0]) {
-					rotate_extrude(angle=circle_deg, convexity=10)
-						translate([guard_radius - tyre_width, 0]) mountProfile(mount_width);
+				barWithTap(guard_radius, 11, hole=false);
+				#translate([-1, 11]) {
+					translate([0,0,10]) cylinder(d = mount_side_cutout_diameter, h = nut_mount_height + tolerance, center = true);
+					translate([0,0,-10]) cylinder(d = thumb_nut_cutout_diameter, h = nut_mount_height + 1 + tolerance, center = true);
 				}
-				rotate([0,0,3]) translate([-mount_width - 5, 0, -mount_width / 2]) difference() {
+
+				// Shape the end of the bar
+				translate([-mount_width - 5, 0, -mount_width / 2]) difference() {
 					resize([0, mount_width * 2 - 10, 0]) cube(mount_width);
 					translate([mount_width / 2 - 1, mount_width + 10, mount_width / 2]) resize([mount_width / 2 + 10, mount_width * 3, 0]) sphere(d=mount_width);
-				}			
+				}
+				// More bar shaping
+				translate([-mount_width + 12, -29, -mount_width / 2]) rotate(19) difference() {
+					resize([0, mount_width * 2 - 10, 0]) cube(mount_width);
+					translate([mount_width / 2 + 6, mount_width + 10, mount_width / 2]) resize([mount_width / 2 + 10, mount_width * 3, 0]) sphere(d=mount_width);
+				}
 			}
 		}
 	}
