@@ -8,6 +8,7 @@ guard_radius=tyre_radius + clearance / 2;
 guard_diameter=guard_radius * 2;
 guard_width=tyre_width + 30;
 guard_thickness=3;
+lip_length=4;
 
 circle_deg=45;
 
@@ -56,13 +57,15 @@ module guardProfile() {
 				translate([inner_width - 20, 0, 0]) square(inner_width, center=true);
 			}
 			translate([-guard_width + 20, -guard_width / 2, 0]) square(guard_width);
-			translate([(guard_width / 2) - 2, 0, 0]) resize([10, 22.5]) circle();
+			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + tolerance, mount_width + tolerance]) circle();
 		}
 
 		// Reinforcement for shaft
 		difference() {
-			translate([(guard_width / 2) - 2, 0, 0]) resize([12.5, 25]) circle();
-			translate([(guard_width / 2) - 2, 0, 0]) resize([10, 22.5]) circle();
+			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + guard_thickness * 2, mount_width + guard_thickness * 2]) circle();
+			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + tolerance, mount_width + tolerance]) circle();
+			//translate([5, -mount_width / 2, 0]) #square(mount_width);
+			
 		}
 	}
 }
@@ -136,9 +139,32 @@ module mount() {
 	}
 }
 
+module guard_lip(tol = 0) {
+	cutout_width=59 - tol * 2;
+	difference() {
+		guardProfile();
+		translate([1.6 - tol, 0, 0]) guardProfile();
+		translate([35,-cutout_width / 2,0]) square(cutout_width);
+	}
+}
+
 module guard() {
-    rotate_extrude(angle=circle_deg, convexity=10)
-       translate([guard_radius - tyre_width, 0]) guardProfile();
+	lip_tolerance = 0.3;
+	lip_angle = (lip_length - lip_tolerance) / (2 * PI * guard_radius) * 360;
+	lip_inset_angle = (lip_length) / (2 * PI * guard_radius) * 360;
+
+	union() {
+		difference() {
+		    rotate_extrude(angle=circle_deg, convexity=10)
+		       translate([guard_radius - tyre_width, 0]) guardProfile();
+
+			rotate(0) rotate_extrude(angle=lip_inset_angle, convexity=10) 
+				translate([guard_radius - tyre_width - 0.01, 0]) guard_lip();
+		}
+		
+		rotate(circle_deg) rotate_extrude(angle=lip_angle, convexity=10) 
+			translate([guard_radius - tyre_width, 0]) guard_lip(lip_tolerance);
+	}
 }
 
 module tyre() {
@@ -146,12 +172,14 @@ module tyre() {
         translate([tyre_radius - tyre_width, 0]) circle(d=tyre_width);
 }
 
-barWithTap(guard_radius, circle_deg);
+//barWithTap(guard_radius, circle_deg);
 
 //color("green") tyre();
 //nutMountProfile();
 
-//guard();
+translate([-guard_radius, 0,0]) guard();
 //mount();
+
 //guardProfile();
 
+// guard_lip();
