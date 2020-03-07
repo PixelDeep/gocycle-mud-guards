@@ -1,14 +1,16 @@
 $fn=400;
 tyre_width=45;
-tyre_radius=260;
+tyre_radius=265;
 tyre_diameter=tyre_radius * 2;
 
 clearance=30;
-guard_radius=tyre_radius + clearance / 2;
+guard_radius=tyre_radius + clearance;
 guard_diameter=guard_radius * 2;
 guard_width=tyre_width + 30;
 guard_thickness=3;
 lip_length=4;
+
+echo (guard_radius);
 
 circle_deg=45;
 
@@ -23,7 +25,7 @@ thumb_nut_cutout_diameter = 26.3;
 nut_mount_height = 10;
 nut_mount_diameter = 40;
 
-tolerance = 0.6;
+tolerance = 0.3;
 
 module nutMountProfile() {
 	thumb_nut_radius = (thumb_nut_diameter + tolerance) / 2;
@@ -48,6 +50,7 @@ module mountProfile(width, new_height) {
 
 module guardProfile() {
 	inner_width = guard_width - guard_thickness;
+	t = 0.1; // Loosen up tolerance
 	union() {
 		difference() {	
 			resize([guard_width + 10, guard_width]) circle(d=guard_width);
@@ -57,13 +60,13 @@ module guardProfile() {
 				translate([inner_width - 20, 0, 0]) square(inner_width, center=true);
 			}
 			translate([-guard_width + 20, -guard_width / 2, 0]) square(guard_width);
-			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + tolerance, mount_width + tolerance]) circle();
+			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height -t, mount_width -t]) circle();
 		}
 
 		// Reinforcement for shaft
 		difference() {
-			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + guard_thickness * 2, mount_width + guard_thickness * 2]) circle();
-			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + tolerance, mount_width + tolerance]) circle();
+			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + 5, mount_width + 5]) circle();
+			translate([(guard_width / 2) - 2, 0, 0]) resize([bar_height + t, mount_width + t]) circle();
 			//translate([5, -mount_width / 2, 0]) #square(mount_width);
 			
 		}
@@ -172,12 +175,12 @@ module tyre() {
         translate([tyre_radius - tyre_width, 0]) circle(d=tyre_width);
 }
 
-//barWithTap(guard_radius, circle_deg);
+barWithTap(guard_radius, circle_deg);
 
 //color("green") tyre();
 //nutMountProfile();
 
-translate([-guard_radius, 0,0]) guard();
+// translate([-guard_radius, 0,0]) guard();
 //mount();
 
 //guardProfile();
