@@ -15,7 +15,8 @@ shell_thickness = 5;
 circle_deg=44;
 
 shock_mount_diameter = 31;
-shock_mount_height = 22;
+shock_mount_height = 20;
+shock_mount_angle = 45;
 shock_absorber_diameter = 23;
 
 mount_width = 30;
@@ -118,18 +119,16 @@ module shock_mount_damasque_profile() {
 module mount() {
 	difference() {	
 		union() {
-			translate([0, -5, -nut_mount_height / 2]) {
-				cylinder(d=nut_mount_diameter, h = nut_mount_height);				
-			}
+			translate([0, -5, -nut_mount_height / 2])
+				cylinder(d=nut_mount_diameter, h = nut_mount_height);
 
 			translate([0, -5, nut_mount_height / 2])
 				cylinder(d1=nut_mount_diameter, d2 = shock_mount_diameter + shell_thickness, h = shock_mount_height);
 
-
+			// Mount for bar support
 			bar_angle = 6;
-			translate([10, -15]) {
+			translate([9, 0]) {
 				difference() {
-					// Mount for bar support
 					intersection() {
 						barWithTap(guard_radius, bar_angle, hole=false);
 						translate([-mount_width / 2, mount_width + 14, 0]) {
@@ -150,11 +149,10 @@ module mount() {
 		translate([0, -5, -nut_mount_height / 2 - tolerance]) {
 			cylinder(d=thumb_nut_diameter + tolerance, h = nut_mount_height + tolerance * 2);
 		}
-		translate([0, -5, shock_mount_height - 6]) cylinder(d = shock_mount_diameter + tolerance * 2, h = shock_mount_height + tolerance, center = true);
+		translate([0, -5, shock_mount_height - 5]) cylinder(d = shock_mount_diameter + tolerance * 2, h = shock_mount_height + tolerance, center = true);
 
 		// Cut out for shock mount
-		
-		rotate(35) translate([10, -3, nut_mount_height / 2 + shock_mount_height / 2])
+		rotate(shock_mount_angle) translate([10, -3, nut_mount_height / 2 + shock_mount_height / 2])
 			cube([shock_mount_height, shock_absorber_diameter + tolerance, shock_mount_height + tolerance], center= true);
 		
 	}
