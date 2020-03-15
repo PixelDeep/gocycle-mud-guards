@@ -1,4 +1,4 @@
-$fn=400;
+$fn=100;
 tyre_width=45;
 tyre_radius=265;
 tyre_diameter=tyre_radius * 2;
@@ -10,36 +10,29 @@ guard_width=tyre_width + 30;
 guard_thickness=3;
 lip_length=4;
 
-echo (guard_radius);
+shell_thickness = 5;
 
-circle_deg=45;
+circle_deg=44;
 
-mount_side_cutout_diameter = 32;
+shock_mount_diameter = 31;
+shock_mount_height = 22;
+shock_absorber_diameter = 23;
 
 mount_width = 30;
 bar_height = 15;
 
 tap_length = 25;
 thumb_nut_diameter = 15.9;
-thumb_nut_cutout_diameter = 26.3;
+thumb_nut_cutout_diameter = 26.5;
 nut_mount_height = 10;
 nut_mount_diameter = 40;
 
 tolerance = 0.3;
 
-module nutMountProfile() {
-	thumb_nut_radius = (thumb_nut_diameter + tolerance) / 2;
-	nut_mount_radius = nut_mount_diameter / 2;
+module fillet(diameter = 15) {
 	difference() {
-		union() {
-			translate([-18, 14.5]) difference() {
-				square(15);
-				translate([15,15]) circle(10);
-			}
-			circle(d=nut_mount_diameter);
-			translate([-0.6,-1]) circle(d=nut_mount_diameter);
-		}		
-		circle(d=thumb_nut_diameter + tolerance);
+		square(diameter);
+		translate([diameter, diameter]) circle(d = diameter);
 	}
 }
 
@@ -85,7 +78,7 @@ module guardBarTap(bar_radius, os = 0) {
 	translate([-bar_radius - 5, 0]) {
 		rotate([0,0, os])
 		rotate_extrude(angle=tap_angle, convexity=10)
-			translate([bar_radius - tyre_width, 0]) mountProfile(mount_width - 4 - tolerance, bar_height - 4);	
+			translate([bar_radius - tyre_width, 0]) mountProfile(mount_width - 4 - tolerance * 2, bar_height - 4);	
 	}
 }
 
@@ -112,33 +105,58 @@ module barWithTap(bar_radius, bar_angle, tap=true, hole=true) {
 	}
 }
 
+module shock_mount_damasque_profile() {
+	inner_x = nut_mount_diameter - shock_mount_diameter;
+	polygon([
+		[inner_x, 0],
+		[inner_x, shock_mount_height],
+		[inner_x + shell_thickness / 2, shock_mount_height],
+		[inner_x + shell_thickness, 0]
+	]);
+}
+
 module mount() {
-	union() {
-		translate([0, -5, -nut_mount_height / 2]) {
-				linear_extrude(height = nut_mount_height)
-					nutMountProfile();
-		}
+	difference() {	
+		union() {
+			translate([0, -5, -nut_mount_height / 2]) {
+				cylinder(d=nut_mount_diameter, h = nut_mount_height);				
+			}
 
-		translate([1, -16]) {
-			difference() {
-				barWithTap(guard_radius, 11, hole=false);
-				#translate([-1, 11]) {
-					translate([0,0,10]) cylinder(d = mount_side_cutout_diameter, h = nut_mount_height + tolerance, center = true);
-					translate([0,0,-10]) cylinder(d = thumb_nut_cutout_diameter, h = nut_mount_height + 1 + tolerance, center = true);
-				}
+			translate([0, -5, nut_mount_height / 2])
+				cylinder(d1=nut_mount_diameter, d2 = shock_mount_diameter + shell_thickness, h = shock_mount_height);
 
-				// Shape the end of the bar
-				translate([-mount_width - 5, 0, -mount_width / 2]) difference() {
-					resize([0, mount_width * 2 - 10, 0]) cube(mount_width);
-					translate([mount_width / 2 - 1, mount_width + 10, mount_width / 2]) resize([mount_width / 2 + 10, mount_width * 3, 0]) sphere(d=mount_width);
-				}
-				// More bar shaping
-				translate([-mount_width + 12, -29, -mount_width / 2]) rotate(19) difference() {
-					resize([0, mount_width * 2 - 10, 0]) cube(mount_width);
-					translate([mount_width / 2 + 6, mount_width + 10, mount_width / 2]) resize([mount_width / 2 + 10, mount_width * 3, 0]) sphere(d=mount_width);
+
+			bar_angle = 6;
+			translate([10, -15]) {
+				difference() {
+					// Mount for bar support
+					intersection() {
+						barWithTap(guard_radius, bar_angle, hole=false);
+						translate([-mount_width / 2, mount_width + 14, 0]) {
+							resize([mount_width / 2 + 10, mount_width * 3, 0])
+							sphere(d=mount_width + 2);
+						}
+					}
 				}
 			}
 		}
+
+		// Cutout for thumb nut
+		translate([0, -5, -9]) {
+			cylinder(d = thumb_nut_cutout_diameter, h = nut_mount_height, center = true);
+		}
+
+		// Holes for thumb nut and shock mount
+		translate([0, -5, -nut_mount_height / 2 - tolerance]) {
+			cylinder(d=thumb_nut_diameter + tolerance, h = nut_mount_height + tolerance * 2);
+		}
+		translate([0, -5, shock_mount_height - 6]) cylinder(d = shock_mount_diameter + tolerance * 2, h = shock_mount_height + tolerance, center = true);
+
+		// Cut out for shock mount
+		
+		rotate(35) translate([10, -3, nut_mount_height / 2 + shock_mount_height / 2])
+			cube([shock_mount_height, shock_absorber_diameter + tolerance, shock_mount_height + tolerance], center= true);
+		
 	}
 }
 
@@ -175,13 +193,15 @@ module tyre() {
         translate([tyre_radius - tyre_width, 0]) circle(d=tyre_width);
 }
 
-barWithTap(guard_radius, circle_deg);
+//barWithTap(guard_radius, circle_deg);
 
 //color("green") tyre();
 //nutMountProfile();
 
 // translate([-guard_radius, 0,0]) guard();
-//mount();
+mount();
+
+//shock_mount_damasque_profile();
 
 //guardProfile();
 
