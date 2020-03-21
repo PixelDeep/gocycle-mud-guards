@@ -1,6 +1,6 @@
 $fn=300;
-high_fn = 600;
-mid_fn = 300;
+high_fn = $fn * 2;
+mid_fn = $fn;
 low_fn = 100;
 
 tyre_width=45;
@@ -196,10 +196,10 @@ module mountBar(bar_angle) {
 		hull() {
 			linear_extrude(1) barProfile(mount_width);
 			translate([(guard_width / 2) - 2, 5, 25])
-				rotate([0, 100, 0]) cube([1, 15, 10], center = true);
+				rotate([0, 100, 0]) cube([1, 15, 25], center = true);
 		}
 
-		translate([(guard_width / 2) - 2 + bar_height - tolerance - 0.1, 0, 0]) rotate([-90, 0, 0]) barWithTap(guard_radius, bar_angle);
+		translate([(guard_width / 2) - 2 + bar_height - tolerance - 0.1, 0, 0]) rotate([-90, 0, 0]) barWithTap(guard_radius, bar_angle, hole=false);
 	}
 }
 
