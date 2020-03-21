@@ -1,4 +1,8 @@
 $fn=300;
+high_fn = 600;
+mid_fn = 300;
+low_fn = 100;
+
 tyre_width=45;
 tyre_radius=265;
 tyre_diameter=tyre_radius * 2;
@@ -70,7 +74,7 @@ module guardProfile() {
 
 module guardBar(bar_radius, bar_angle) {
 	translate([-bar_radius - 5, 0]) {
-		rotate_extrude(angle=bar_angle, convexity=10)
+		rotate_extrude($fn=high_fn, angle=bar_angle, convexity=10)
 			translate([bar_radius - tyre_width, 0]) barProfile(mount_width);	
 	}
 }
@@ -79,7 +83,7 @@ module guardBarTap(bar_radius, os = 0) {
 	tap_angle = tap_length / (2 * PI * bar_radius) * 360;
 	translate([-bar_radius - 5, 0]) {
 		rotate([0,0, os])
-		rotate_extrude(angle=tap_angle, convexity=10)
+		rotate_extrude($fn=high_fn, angle=tap_angle, convexity=10)
 			translate([bar_radius - tyre_width, 0]) barProfile(mount_width - 4 - tolerance, bar_height - 4 - tolerance);
 	}
 }
@@ -187,22 +191,87 @@ module guard(guard_deg = circle_deg) {
 	}
 }
 
+module mountBar(bar_angle) {
+	rotate([90, 0, 0]) union() {
+		hull() {
+			linear_extrude(1) barProfile(mount_width);
+			translate([(guard_width / 2) - 2, 5, 25])
+				rotate([0, 100, 0]) cube([1, 15, 10], center = true);
+		}
+
+		translate([(guard_width / 2) - 2 + bar_height - tolerance - 0.1, 0, 0]) rotate([-90, 0, 0]) barWithTap(guard_radius, bar_angle);
+	}
+}
+
+module mount_v2() {
+	difference() {	
+		union() {
+			// Bottom plate
+			translate([0, -5, -nut_mount_height / 2])
+				cylinder($fn=low_fn, d=nut_mount_diameter, h=nut_mount_height);
+
+			// Shock damasque
+			translate([0, -5, nut_mount_height / 2])
+				cylinder($fn=low_fn, d=nut_mount_diameter, h=shock_mount_height);
+
+			// Mount for bar support
+			bar_angle = 15;
+			rotate(4.8) translate([-39, 35]) mountBar(bar_angle);
+			//translate([9, 0]) rotate(-2) barWithTap(guard_radius, 50, hole=false);
+		}
+
+		// Cutout for thumb nut
+		translate([0, -5, -9]) {
+			cylinder($fn=low_fn, d = thumb_nut_cutout_diameter, h = nut_mount_height, center = true);
+		}
+
+		// Holes for thumb nut and shock mount
+		translate([0, -5, -nut_mount_height / 2 - tolerance]) {
+			cylinder($fn = low_fn, d=thumb_nut_diameter + tolerance, h = nut_mount_height + tolerance * 2);
+		}
+
+		// Cutout for shock mount
+		translate([0, -5, shock_mount_height - 5]) {
+			cylinder($fn=low_fn, d = shock_mount_diameter + tolerance, h = shock_mount_height + tolerance, center = true);
+			translate([0,0,9]) cylinder($fn=low_fn, d1 = shock_mount_diameter + tolerance, d2 = shock_mount_diameter + tolerance * 2 + shell_thickness, h = 2, center = true);
+		}
+
+		// Cut out for shock bar
+		rotate(shock_mount_angle) {
+			translate([0, -13 - tolerance / 2, nut_mount_height / 2 - tolerance / 2]) {
+				h1 = shock_mount_height + tolerance - 9.5;
+				h2 = 4;
+				translate([5, 10, shock_mount_height / 2 - 2]) rotate([45,0,0]) cube(shock_absorber_diameter);
+				cube([shock_mount_height, shock_absorber_diameter + tolerance - 2.1, shock_mount_height + tolerance]);
+				hull() {				
+					translate([0,-1,h1]) cube([shock_mount_height, shock_absorber_diameter + tolerance, h2]);
+					translate([0,0,h1 + 4]) cube([shock_mount_height, shock_absorber_diameter + tolerance - 2.1, 1]);
+				}
+			}
+		}
+	}
+}
+
+
 module tyre() {
     rotate_extrude(angle=360, convexity=10)
         translate([tyre_radius - tyre_width, 0]) circle(d=tyre_width);
 }
+
+//mountBar();
+mount_v2();
 
 // translate([5, 0, 0]) barWithTap(guard_radius, circle_deg);
 
 // color("green") tyre();
 // nutMountProfile();
 
-rotate([90,0,0]) translate([-guard_radius, 0,0]) guard(guard_deg = 15);
+// rotate([90,0,0]) translate([-guard_radius, 0,0]) guard(guard_deg = 15);
 // mount();
 
 // shock_mount_damasque_profile();
 
-//guardProfile();
+// guardProfile();
 
 //guard_lip();
 
