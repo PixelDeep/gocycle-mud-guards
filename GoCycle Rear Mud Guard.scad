@@ -41,8 +41,7 @@ module fillet(diameter = 15) {
 	}
 }
 
-module barProfile(width, new_height) {
-	height = new_height ? new_height : bar_height;
+module barProfile(width = guard_width, height = bar_height) {
 	translate([(guard_width / 2) - 2, 0, 0]) resize([height - tolerance, width - tolerance]) circle();
 }
 
@@ -72,14 +71,14 @@ module guardProfile() {
 	}
 }
 
-module guardBar(bar_radius, bar_angle) {
+module guardBar(bar_radius, bar_angle, os = 0, w = mount_width, h = bar_height) {
 	translate([-bar_radius - 5, 0]) {
-		rotate_extrude($fn=high_fn, angle=bar_angle, convexity=10)
-			translate([bar_radius - tyre_width, 0]) barProfile(mount_width);	
+		rotate(os) rotate_extrude($fn=high_fn, angle=bar_angle, convexity=10)
+			translate([bar_radius - tyre_width, 0]) barProfile(w, h);
 	}
 }
 
-module guardBarTap(bar_radius, os = 0) {
+module guardBarTap(bar_radius = guard_radius, os = 0) {
 	tap_angle = tap_length / (2 * PI * bar_radius) * 360;
 	translate([-bar_radius - 5, 0]) {
 		rotate([0,0, os])
@@ -88,12 +87,13 @@ module guardBarTap(bar_radius, os = 0) {
 	}
 }
 
-module guardBarHole(bar_radius, os = 0) {
-	hole_angle = (tap_length + tolerance) / (2 * PI * bar_radius) * 360;	
+module guardBarHole(bar_radius = guard_radius, os = 0) {
+	hole_angle = (tap_length + tolerance) / (2 * PI * bar_radius) * 360;
+	offset = os != 0 ? os - hole_angle + 0.001: 0;
 	translate([-bar_radius - 5, 0]) {
-		rotate([0,0,os])
-		rotate_extrude(angle=hole_angle, convexity=10)
-			translate([bar_radius - tyre_width, 0]) barProfile(mount_width - 4, bar_height - 4);	
+		rotate([0, 0, offset])
+		#rotate_extrude($fn=high_fn, angle=hole_angle, convexity=10)
+			translate([bar_radius - tyre_width, 0]) barProfile(mount_width - 4, bar_height - 4);
 	}
 }
 
@@ -254,14 +254,66 @@ module mount_v2() {
 	}
 }
 
+module frontMount() {
+	margin = 15;
+	x = 60;
+	y = 15;
+	z = 8;
+	guard_angle = 22;
+	hole_diameter = 5 + tolerance;
+	hole_offset = x / 2 - 10 - hole_diameter / 2;
+	cutout_bottom = x - hole_offset + 2 * 2;
+
+	difference() {
+		union() {
+			intersection() {
+				cube([x, y, z]);
+				translate([x / 2, 6, z / 2]) resize([x, y * 2, z]) cylinder(d=x, h=x, center = true);
+			}
+			translate([30, 13, 0]) rotate(90) frontMountGuard(angle = guard_angle);
+		}
+		translate([hole_offset, y / 2 + tolerance, 0]) screwHole(h1=20, h2=10, mh = z);
+		translate([x - hole_offset, y / 2 + tolerance, 0]) screwHole(h1=20, h2=10, mh = z);
+
+		translate([0, 0, -guard_width / 2]) {
+			hull() {
+				translate([0, y / 2, 0]) cube([x, 1, guard_width / 2]);
+				translate([(x - cutout_bottom) / 2, 0, 0]) cube([cutout_bottom, 1, guard_width / 2]);				
+			}
+		}
+	}
+}
+
+module frontMountGuard(angle = 15) {
+	difference() {
+		union() {
+			translate([-guard_radius - 5, 0, 0]) rotate(-angle / 2) guard(guard_deg=angle);
+			guardBar(bar_radius=guard_radius, bar_angle = angle, h = bar_height + tolerance + 0.1, w = mount_width + tolerance + 0.1, os = -angle / 2);
+		}
+		rotate([180, 0, 0]) guardBarHole(os=angle / 2);
+		guardBarHole(os=angle / 2);
+	}	
+}
+
+module screwHole(d1 = 5, d2 = 8.5, h1 = 15, h2 = 5, mh = 0) {
+	translate([0,0,mh - h1]) union() {
+		cylinder(d=d1 + tolerance, h=h1);
+		translate([0, 0, h1]) cylinder(d=d2 + tolerance, h=h2);		
+	}
+}
+
 
 module tyre() {
     rotate_extrude(angle=360, convexity=10)
         translate([tyre_radius - tyre_width, 0]) circle(d=tyre_width);
 }
 
-//mountBar();
-mount_v2();
+frontMount();
+
+// barProfile(mount_width, bar_height)
+
+// mountBar();
+// mount_v2();
 
 // translate([5, 0, 0]) barWithTap(guard_radius, circle_deg);
 
@@ -275,6 +327,6 @@ mount_v2();
 
 // guardProfile();
 
-//guard_lip();
+// guard_lip();
 
-//translate([-guard_radius, 0,0]) rotate_extrude(angle=10, convexity=10) translate([guard_radius - tyre_width, 0]) guardProfile();
+// translate([-guard_radius, 0,0]) rotate_extrude(angle=10, convexity=10) translate([guard_radius - tyre_width, 0]) guardProfile();
