@@ -243,9 +243,11 @@ module mount_v2() {
 				h2 = 4;
 				translate([5, 10, shock_mount_height / 2 - 2]) rotate([45,0,0]) cube(shock_absorber_diameter);
 				cube([shock_mount_height, shock_absorber_diameter + tolerance - 2.1, shock_mount_height + tolerance]);
+				translate([0, 0, h1]) cube([shock_mount_height, shock_absorber_diameter - 1 + tolerance, h1]);
+
 				hull() {				
-					translate([0,-1,h1]) cube([shock_mount_height, shock_absorber_diameter + tolerance, h2]);
-					translate([0,0,h1 + 4]) cube([shock_mount_height, shock_absorber_diameter + tolerance - 2.1, 1]);
+					translate([0,-1, h1]) cube([shock_mount_height, shock_absorber_diameter + tolerance, h2]);
+					translate([0,0, h1 + 4]) cube([shock_mount_height, shock_absorber_diameter + tolerance - 2.1, 1]);
 				}
 			}
 		}
